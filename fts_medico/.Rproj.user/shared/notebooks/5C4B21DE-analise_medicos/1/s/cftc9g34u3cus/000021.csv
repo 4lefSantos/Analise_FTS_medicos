@@ -1,0 +1,7 @@
+"0","library(tidyverse)"
+"0","library(readxl)"
+"0","library(RODBC)"
+"0",""
+"0","censo_municipios_goias <- read_excel(""01-dados/censo municipios goias.xlsx"")"
+"2","Erro: `path` does not exist: ‘01-dados/censo municipios goias.xlsx’
+"
