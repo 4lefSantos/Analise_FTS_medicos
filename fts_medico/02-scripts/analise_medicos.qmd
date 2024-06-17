@@ -14,7 +14,9 @@ O presente trabalho busca estimar a razão de médicos por habitantes dos munic�
 
 1.2. Tratamento dos dados populacionais;
 
-2.1 Levantamento dos dados de profissionais de saúde por munícipio;
+2\. Levantamento dos dados de profissionais de saúde por munícipio;
+
+2.1 Conexão Dremio
 
 2.2. Selecionar apenas médicos do munícipio de Goiás;
 
@@ -64,6 +66,8 @@ faixa_total <- rbind(faixa_feminino, faixa_masculino)
 
 
 ```
+
+## 2. Levantamento dos dados de profissionais de saúde por munícipio;
 
 ```{r}
 # codigo para acessar dados de um datalake 
@@ -154,4 +158,66 @@ razao_med_total <- população_municipios |>
   left_join(medicos_total_mun, by = c("ibge" = "cod_ibge")) |> 
   mutate(razão_medicos = medicos_FTE_40/população)
   
+```
+
+```{r}
+
+PIB <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/PIB.xlsx") |> 
+  mutate(ibge = substr(ibge, 1, 6))
+
+base_final <- razao_med_total |> 
+  left_join(PIB, by = c("ibge" = "ibge")) |> 
+  mutate(pib_percapita = (PIB/população)*1000)
+  
+  
+base_final <- base_final |> 
+  select(ibge, municipio.x, população, medicos_FTE_40, razão_medicos, pib_percapita)
+
+```
+
+```{r}
+IDH <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/IDH.xlsx") |> 
+  mutate(ibge = substr(ibge, 1, 6))
+
+base_final <- base_final |> 
+  left_join(IDH, by = c("ibge" = "ibge"))
+
+base_final <- base_final |> 
+  select(-municipio.x)
+```
+
+```{r}
+Gini <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/Gini.xlsx") |> 
+  mutate(ibge = substr(ibge, 1, 6))
+
+base_final <- base_final |> 
+  left_join(Gini, by = c("ibge" = "ibge"))
+
+base_final <- base_final |> 
+  select(-Territorialidades)
+```
+
+```{r}
+urban <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/Urbanização.xlsx") |> 
+  mutate(ibge = substr(ibge, 1, 6))
+
+urban <- urban |> 
+  select(-municipio)
+
+base_final <- base_final |> 
+  left_join(urban, by = c("ibge" = "ibge"))
+
+base_final <- base_final |> 
+  mutate(tx_urban = km_urbanizado/km_mapeado)
+```
+
+```{r}
+cadunico <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/cadunico.xlsx") |> 
+  mutate(ibge = substr(ibge, 1, 6))
+
+cadunico <- cadunico |> 
+  select(-Unidade_Territorial)
+
+base_final <- base_final |> 
+  left_join(cadunico, by = c("ibge" = "ibge"))
 ```

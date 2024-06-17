@@ -1,0 +1,2 @@
+"0","urban <- read_excel(""C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/Urbanização.xlsx"") |> "
+"0","  mutate(ibge = substr(ibge, 1, 6))"

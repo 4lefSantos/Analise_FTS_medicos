@@ -1,0 +1,2 @@
+"0","cadunico <- read_excel(""C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/cadunico.xlsx"") |> "
+"0","  mutate(ibge = substr(ibge, 1, 6))"

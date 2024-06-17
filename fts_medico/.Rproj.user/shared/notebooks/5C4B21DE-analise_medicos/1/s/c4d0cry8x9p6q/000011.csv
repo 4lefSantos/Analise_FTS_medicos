@@ -27,3 +27,4 @@
 "0","razao_med_terciario <- população_municipios |> "
 "0","    left_join(med_terciario, by = c(""ibge"" = ""cod_ibge"")) |> "
 "0","    mutate(razao_medicos = FTE_40/população)"
+"0",""
