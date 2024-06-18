@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Analise_medicos</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="analise_medicos_files/libs/clipboard/clipboard.min.js"></script>
+<script src="analise_medicos_files/libs/quarto-html/quarto.js"></script>
+<script src="analise_medicos_files/libs/quarto-html/popper.min.js"></script>
+<script src="analise_medicos_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="analise_medicos_files/libs/quarto-html/anchor.min.js"></script>
+<link href="analise_medicos_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="analise_medicos_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="analise_medicos_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="analise_medicos_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="analise_medicos_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Analise_medicos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="médicos-nos-munícipios-de-goiás" class="level1">
+<h1>Médicos nos munícipios de Goiás</h1>
+<p>Para estimar a razão de médicos por população para cada município de Goiás, será seguindo o seguinte processo:<br>
+<br>
+1° Levantamento dos dados populacionais;<br>
+2° Levantamento dos dados de médicos na métrica FTE;<br>
+3° Levantamento de indicadores socio-econômicos dos municípios.</p>
+<p>Após isso, os dados serão agregados em uma única base de dados, a execução operacional desses processos seguirá a metodologia detalhada abaixo:</p>
+<p>1. Levantamento dos dados populacionais.<br>
+1.1. Censo 2022;<br>
+1.2. Tratamento dos dados populacionais.</p>
+<p>2. Levantamento dos dados de profissionais de saúde por munícipio.<br>
+2.1. Conexão Dremio;<br>
+2.2. Selecionar apenas médicos do munícipio de Goiás.</p>
+<p>3. Calculando a razão médicos por habitantes desagregado por nível de atenção.</p>
+<p>4. Calculando a razão médicos por habitantes.</p>
+<p>5. Levantamento de dados socio-econômicos por município.<br>
+5.1. PIB per capita;<br>
+5.2. Índice de Desenvolvimento Humano (IDH);<br>
+5.3 Índice de Gini;<br>
+5.4. Taxa de urbanização;<br>
+5.5. Número de inscritos no Cadastro Único.</p>
+</section>
+<section id="levantamento-dos-dados-populacionais." class="level1">
+<h1>1. Levantamento dos dados populacionais.</h1>
+<p>A coleta de dados populacionais utilizada foi do Censo 2022 através do Sistema IBGE de Recuperação Automática - SIDRA, exportada em formato xlsx.</p>
+<section id="censo-2022." class="level3">
+<h3 class="anchored" data-anchor-id="censo-2022.">1.1. Censo 2022.</h3>
+<p>Aqui utiliza-se a função read_excel do pacote readxl para o carregamento dos dados.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'tidyverse' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'ggplot2' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'tibble' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'tidyr' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'readr' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'purrr' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'dplyr' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'stringr' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'forcats' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'lubridate' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'readxl' was built under R version 4.3.3</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RODBC)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>censo_municipios_goias <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/censo municipios goias.xlsx"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="tratamento-dos-dados-populacionais." class="level3">
+<h3 class="anchored" data-anchor-id="tratamento-dos-dados-populacionais.">1.2. Tratamento dos dados populacionais.</h3>
+<p>Após o carregamento da base, executa-se alguns tratamentos: empilhamento dos dados dividido em dois datraframe distintos (masculino e feminino), e por fim a agregação dessas duas bases.</p>
+</section>
+<section id="levantamento-dos-dados-de-profissionais-de-saúde-por-munícipio" class="level2">
+<h2 class="anchored" data-anchor-id="levantamento-dos-dados-de-profissionais-de-saúde-por-munícipio">2. Levantamento dos dados de profissionais de saúde por munícipio;</h2>
+<p>O levantamento de dados de profissionais de saúde por munícipio será realizado na métrica FTE (Full-time Equivalet) que considera as horas úteis de trabalho.</p>
+<section id="conexão-dremio" class="level3">
+<h3 class="anchored" data-anchor-id="conexão-dremio">2.1. Conexão Dremio</h3>
+<p>Os dados coletados através da conexão com o bando de dados hospedados no Dremio.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># codigo para acessar dados de um datalake </span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>dremio_host <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"endereco"</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>dremio_port <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"port"</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>dremio_uid <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"uid"</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>dremio_pwd <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"datalake"</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>channel <span class="ot">&lt;-</span> <span class="fu">odbcDriverConnect</span>(<span class="fu">sprintf</span>(<span class="st">"DRIVER=Dremio Connector;</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">                                     HOST=%s;</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="st">                                     PORT=%s;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="st">                                     UID=%s;</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="st">                                     PWD=%s;</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="st">                                     AUTHENTICATIONTYPE=Basic Authentication;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="st">                                     CONNECTIONTYPE=Direct"</span>, </span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>                         dremio_host, </span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>                         dremio_port, </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>                         dremio_uid, </span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>                         dremio_pwd))</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">'SELECT * FROM "Open Analytics Layer".Profissionais."Quantidade de profissionais de saúde por município, na métrica da FTE"'</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>profissionais_saude <span class="ot">&lt;-</span> <span class="fu">sqlQuery</span>(channel, query, <span class="at">as.is =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="selecionar-apenas-médicos-do-munícipio-de-goiás" class="level3">
+<h3 class="anchored" data-anchor-id="selecionar-apenas-médicos-do-munícipio-de-goiás">2.2. Selecionar apenas médicos do munícipio de Goiás</h3>
+<p>A seguir será filtrados apenas os médicos dos municípios de Goiás.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#FILTRANDO OS MEDICOS E MUNICIPIOS DE GOIÁS DA BASE DE FTS</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>medicos_municipios <span class="ot">&lt;-</span> profissionais_saude <span class="sc">|&gt;</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ano <span class="sc">==</span> <span class="st">"2024"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(uf_sigla <span class="sc">==</span> <span class="st">"GO"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(categoria <span class="sc">==</span> <span class="st">"Médico"</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">#CALCULANDO A POPULAÇÃO TOTAL POR MUNICÍPIO</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>população_municipios <span class="ot">&lt;-</span> faixa_total <span class="sc">|&gt;</span> </span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(ibge, municipio, total) <span class="sc">|&gt;</span> </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ibge, municipio) <span class="sc">|&gt;</span> </span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(população <span class="ot">=</span> <span class="fu">sum</span>(total)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ibge =</span> <span class="fu">substr</span>(ibge, <span class="dv">1</span>, <span class="dv">6</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'ibge'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="calculando-a-razão-médicos-por-habitantes-desagregado-por-nível-de-atenção" class="level2">
+<h2 class="anchored" data-anchor-id="calculando-a-razão-médicos-por-habitantes-desagregado-por-nível-de-atenção">3. Calculando a razão médicos por habitantes desagregado por nível de atenção;</h2>
+<p>A sequência seguida para cada nível de atenção (primária, secundária e terciária) é de filtrar os respectivos médicos (FTE_40) e agregar na tabela de população por município, criando uma nova variável: razão de médicos por população de cada município.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Filtrando nível de atenção primária</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>med_primario <span class="ot">&lt;-</span> medicos_municipios <span class="sc">|&gt;</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(nivel_atencao <span class="sc">==</span> <span class="st">"Primária"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>regiao, <span class="sc">-</span>macrorregiao, <span class="sc">-</span>cod_regsaud, <span class="sc">-</span>regiao_saude, <span class="sc">-</span>latitude, <span class="sc">-</span>longitude, <span class="sc">-</span>ch_total, <span class="sc">-</span>cod_macrorregiao, <span class="sc">-</span>ano, <span class="sc">-</span>uf_sigla)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co">#CALCULANDO A RAZÃO DE MÉDICOS/POPULAÇÃO DA ATENÇÃO PRIMÁRIA</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>razao_med_primario <span class="ot">&lt;-</span> população_municipios <span class="sc">|&gt;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(med_primario, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"cod_ibge"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">razao_medicos =</span> FTE_40<span class="sc">/</span>população)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co">#Filtrando nível de atenção secundario</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>med_secundario <span class="ot">&lt;-</span> medicos_municipios <span class="sc">|&gt;</span> </span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(nivel_atencao <span class="sc">==</span> <span class="st">"Secundária"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>regiao, <span class="sc">-</span>macrorregiao, <span class="sc">-</span>cod_regsaud, <span class="sc">-</span>regiao_saude, <span class="sc">-</span>latitude, <span class="sc">-</span>longitude, <span class="sc">-</span>ch_total, <span class="sc">-</span>cod_macrorregiao, <span class="sc">-</span>ano, <span class="sc">-</span>uf_sigla)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co">#CALCULANDO A RAZÃO DE MÉDICOS/POPULAÇÃO DA ATENÇÃO SECUNDARIO</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>razao_med_secundario <span class="ot">&lt;-</span> população_municipios <span class="sc">|&gt;</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(med_secundario, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"cod_ibge"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">razao_medicos =</span> FTE_40<span class="sc">/</span>população)</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co">#Filtrando nível de atenção terciario</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>med_terciario <span class="ot">&lt;-</span> medicos_municipios <span class="sc">|&gt;</span> </span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(nivel_atencao <span class="sc">==</span> <span class="st">"Terciária"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>regiao, <span class="sc">-</span>macrorregiao, <span class="sc">-</span>cod_regsaud, <span class="sc">-</span>regiao_saude, <span class="sc">-</span>latitude, <span class="sc">-</span>longitude, <span class="sc">-</span>ch_total, <span class="sc">-</span>cod_macrorregiao, <span class="sc">-</span>ano, <span class="sc">-</span>uf_sigla)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a><span class="co">#CALCULANDO A RAZÃO DE MÉDICOS/POPULAÇÃO DA ATENÇÃO TERCIARIO</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>razao_med_terciario <span class="ot">&lt;-</span> população_municipios <span class="sc">|&gt;</span> </span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(med_terciario, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"cod_ibge"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">razao_medicos =</span> FTE_40<span class="sc">/</span>população)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="calculando-a-razão-médicos-por-habitantes" class="level2">
+<h2 class="anchored" data-anchor-id="calculando-a-razão-médicos-por-habitantes">4. Calculando a razão médicos por habitantes;</h2>
+<p>A seguir será calculado o FTE_40 por munícipio, somando todos os níveis de atenção, e agregado na tabela de população por municipio em um novo dataframe, com o cálculo da nova variável: razão de médicos por população.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#CALCULANDO A RAZÃO MEDICO/POPULAÇÃO PARA TODOS OS NÍVEIS DE ATENÇÃO</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>medicos_total_mun <span class="ot">&lt;-</span> medicos_municipios <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(cod_ibge, uf_sigla, FTE_40, municipio) <span class="sc">|&gt;</span> </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cod_ibge, uf_sigla, municipio) <span class="sc">|&gt;</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">medicos_FTE_40 =</span> <span class="fu">sum</span>(FTE_40), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># AGREGANDO A BASE DE MEDICOS POR MUNICÍPIO NA BASE POPULAÇÃO POR MUNICÍPIO</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>razao_med_total <span class="ot">&lt;-</span> população_municipios <span class="sc">|&gt;</span> </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(medicos_total_mun, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"cod_ibge"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(razão<span class="at">_medicos =</span> medicos_FTE_40<span class="sc">/</span>população) <span class="co">#CRIANDO A VARIÁVEL RAZÃO DE MÉDICOS POR POPULAÇÃO</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="levantamento-de-dados-socio-econômicos-por-município." class="level2">
+<h2 class="anchored" data-anchor-id="levantamento-de-dados-socio-econômicos-por-município.">5. Levantamento de dados socio-econômicos por município.</h2>
+<p>A seguir serão coletadas uma séria de indicadores socio-econômicos de forma a integrar a base de dados razao_med_total.</p>
+<section id="pib-per-capita" class="level3">
+<h3 class="anchored" data-anchor-id="pib-per-capita">5.1. PIB per capita;</h3>
+<p>Os dados do PIB por município foram coletados do Sistema IBGE de Recuperação Automática - SIDRA do ano de 2021. Para o cálculo do PIB per capita, dividiu o PIB bruto pelo dado populacional do Censo 2022.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>PIB <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/PIB.xlsx"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ibge =</span> <span class="fu">substr</span>(ibge, <span class="dv">1</span>, <span class="dv">6</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> razao_med_total <span class="sc">|&gt;</span> </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(PIB, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"ibge"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pib_percapita =</span> (PIB<span class="sc">/</span>população)<span class="sc">*</span><span class="dv">1000</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(ibge, municipio.x, população, medicos_FTE_40, razão_medicos, pib_percapita)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="idh" class="level3">
+<h3 class="anchored" data-anchor-id="idh">5.2. IDH</h3>
+<p>Os dados do Índice de Desenvolvimento Humano foram coletados do Atlas Brasil de 2010 quando ocorreu a última publicação pelo Programa das Nações Unidas para o Desenvolvimento (PNUD), e pode ser consultado no seguinte link: <a href="http://www.atlasbrasil.org.br/consulta/planilha" class="uri">http://www.atlasbrasil.org.br/consulta/planilha</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>IDH <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/IDH.xlsx"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ibge =</span> <span class="fu">substr</span>(ibge, <span class="dv">1</span>, <span class="dv">6</span>))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(IDH, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"ibge"</span>))</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>municipio.x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="índice-de-gini" class="level3">
+<h3 class="anchored" data-anchor-id="índice-de-gini">5.3. Índice de Gini</h3>
+<p>Os dados do Índice de Gini que mede a desiguldade de renda foram coletados do Atlas Brasil de 2010 quando ocorreu a última publicação, pode ser consultado no seguinte link: <a href="#0">http://www.atlasbrasil.org.br/consulta/planilha</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>Gini <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/Gini.xlsx"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ibge =</span> <span class="fu">substr</span>(ibge, <span class="dv">1</span>, <span class="dv">6</span>))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(Gini, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"ibge"</span>))</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Territorialidades)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="taxa-de-urbanização" class="level3">
+<h3 class="anchored" data-anchor-id="taxa-de-urbanização">5.4. Taxa de urbanização</h3>
+<p>A fonte dos seguintes dados de urbanização, foram coletadas do IBGE da edição de 2019. A metodologia utilizada é um mapeamento realizado via satélite. Para mais informações consultar o link: <a href="https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15789-areas-urbanizadas.html?=&amp;t=o-que-e" class="uri">https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15789-areas-urbanizadas.html?=&amp;t=o-que-e</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>urban <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/Urbanização.xlsx"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ibge =</span> <span class="fu">substr</span>(ibge, <span class="dv">1</span>, <span class="dv">6</span>))</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>urban <span class="ot">&lt;-</span> urban <span class="sc">|&gt;</span> </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>municipio)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(urban, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"ibge"</span>))</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tx_urban =</span> km_urbanizado<span class="sc">/</span>km_mapeado)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="número-de-inscritos-no-cadastro-único" class="level3">
+<h3 class="anchored" data-anchor-id="número-de-inscritos-no-cadastro-único">5.5. Número de inscritos no Cadastro Único</h3>
+<p>A coleta de dados do número de inscritos no Cadastro Único foi realizado no VIS DATA 3 da Secretaria de Avaliação, Gestão da Informação e Cadastro Único - SAGICAD. Os dados são do TOTAL de pessoas inscritas no programa desagregadas por município. O link para consulta: <a href="https://aplicacoes.cidadania.gov.br/vis/data3/data-explorer.php" class="uri">https://aplicacoes.cidadania.gov.br/vis/data3/data-explorer.php</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>cadunico <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/cadunico.xlsx"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ibge =</span> <span class="fu">substr</span>(ibge, <span class="dv">1</span>, <span class="dv">6</span>))</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>cadunico <span class="ot">&lt;-</span> cadunico <span class="sc">|&gt;</span> </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Unidade_Territorial)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>base_final <span class="ot">&lt;-</span> base_final <span class="sc">|&gt;</span> </span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(cadunico, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"ibge"</span> <span class="ot">=</span> <span class="st">"ibge"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

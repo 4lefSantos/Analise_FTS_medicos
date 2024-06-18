@@ -1,12 +1,12 @@
 {
-    "id": "73792549",
+    "id": "1227D5C8",
     "path": "~/Analise_FTS_medicos/fts_medico/02-scripts/analise_medicos.qmd",
     "project_path": "02-scripts/analise_medicos.qmd",
     "type": "quarto_markdown",
-    "hash": "2310902416",
+    "hash": "1820016003",
     "contents": "",
     "dirty": false,
-    "created": 1718385053619.0,
+    "created": 1718731000826.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
@@ -15,18 +15,19 @@
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "102,0",
-        "scrollLine": "0",
+        "cursorPosition": "39,0",
+        "scrollLine": "71",
         "docOutlineVisible": "1",
         "rmdVisualCollapsedChunks": "",
-        "rmdVisualModeLocation": "3623:2497.77783203125"
+        "rmdVisualModeLocation": "1358:888.888916015625",
+        "docOutlineSize": "342"
     },
     "folds": "",
-    "lastKnownWriteTime": 1718730174,
+    "lastKnownWriteTime": 1718736686,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1718730174,
+    "last_content_update": 1718736686117,
     "read_only": false,
     "read_only_alternatives": []
 }

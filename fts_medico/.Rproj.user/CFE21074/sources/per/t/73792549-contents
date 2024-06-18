@@ -53,16 +53,19 @@ Após o carregamento da base, executa-se alguns tratamentos: empilhamento dos da
 faixa_masculino <- censo_municipios_goias[,1:23] |> 
                       gather(key = "faixa_etaria", value = "total", 3:23) |> 
   mutate(sexo = "Masculino", .after = municipio) |> 
-  mutate(faixa_etaria = gsub("H-", "", faixa_etaria))
+  mutate(faixa_etaria = gsub("-H", "", faixa_etaria))
          
 # CONFIGURANDO BASE FEMININO    
 faixa_feminino <- censo_municipios_goias[,c(1:2, 24:44)] |> 
                       gather(key = "faixa_etaria", value = "total", 3:23) |> 
   mutate(sexo = "Feminino", .after = municipio) |> 
-  mutate(faixa_etaria = gsub("M-", "", faixa_etaria))
+  mutate(faixa_etaria = gsub("-M", "", faixa_etaria))
 
 # EMPILHANDO AS DUAS BASES
-faixa_total <- rbind(faixa_feminino, faixa_masculino)
+faixa_total <- rbind(faixa_feminino, faixa_masculino) |>
+  mutate(total = replace_na(total, 0)) |> 
+  mutate(total = gsub("-", "0", total)) |> 
+  mutate(total = as.numeric(total))
 
 
 ```
