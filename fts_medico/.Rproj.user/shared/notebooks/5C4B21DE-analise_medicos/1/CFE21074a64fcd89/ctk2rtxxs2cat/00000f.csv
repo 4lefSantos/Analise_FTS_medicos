@@ -1,8 +1,0 @@
-"0","Gini <- read_excel(""C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/Gini.xlsx"") |> "
-"0","  mutate(ibge = substr(ibge, 1, 6))"
-"0",""
-"0","base_final <- base_final |> "
-"0","  left_join(Gini, by = c(""ibge"" = ""ibge""))"
-"0",""
-"0","base_final <- base_final |> "
-"0","  select(-Territorialidades)"

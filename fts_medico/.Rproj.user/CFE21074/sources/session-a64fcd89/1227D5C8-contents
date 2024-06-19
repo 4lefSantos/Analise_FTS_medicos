@@ -35,7 +35,7 @@ Após isso, os dados serão agregados em uma única base de dados, a execução 
 
 # 1. Levantamento dos dados populacionais.
 
-A coleta de dados populacionais utilizada foi do Censo 2022 através do Sistema IBGE de Recuperação Automática - SIDRA, exportada em formato xlsx.
+A coleta de dados populacionais utilizada foi do Censo 2022 através do Sistema IBGE de Recuperação Automática - SIDRA (ATUALIZAR), exportada em formato xlsx.
 
 ### 1.1. Censo 2022.
 
@@ -48,6 +48,8 @@ library(RODBC)
 library(geobr)
 library(sf)
 library(ggplot2)
+library(PNADcIBGE)
+library(srvyr)
 ```
 
 ```{r}
@@ -293,6 +295,8 @@ base_final <- base_final |>
   mutate(razão_medicos = razão_medicos*1000)
 ```
 
+## 6. Gráfico coroplético
+
 ```{r}
 
 # UTILIZANDO O PACOTE GEOBR
@@ -312,14 +316,14 @@ mapa <- base_final |>
 mapa_sf <- st_as_sf(mapa)
 
 # UTILIZANDO O SHAPEFILE DO IBGE
-mapaibge <- st_read("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/02-scripts/GO_Municipios_2022.shp") |> 
+mapaibge <- st_read("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/02-scripts/malha_municipal_go/GO_Municipios_2022.shp") |> 
   mutate(CD_MUN = substr(CD_MUN, 1, 6))
 
 mapa2 <- mapa2 |> 
   left_join(base_final, by = c("CD_MUN" = "ibge"))
 
 
-teste <- base_final |> #invertando o left_foin
+
   left_join(mapaibge, by = c("ibge" = "CD_MUN"))
 
 ggplot(data = teste) +
@@ -330,4 +334,109 @@ ggplot(data = teste) +
 
 ggsave('mapa3.png', width = 8, height = 8, dpi = 500)
 
+```
+
+## 7. Calculando salário médio para médicos gerais e especialistas por Unidade Federativa.
+
+```{r}
+base_pnadc <- get_pnadc(2023, 4, vars=c("VD4016","V4010", "UF"))
+
+base_pnad23_4ts <- as_survey(base_pnadc) #HABILITANDO PARA O PACOTE SRVYR
+
+renda_med_geral_4tri23Nacional <- base_pnad23_4ts |> #Nacional
+  filter(V4010 == "2211") |> 
+  summarise(Rend_med_geral = survey_mean(VD4016, na.rm = TRUE)) |> 
+  select(-Rend_med_geral_se)
+
+renda_med_geral_4tri23 <- base_pnad23_4ts |> #Estadual
+  filter(V4010 == "2211") |> 
+  group_by(UF) |> 
+  summarise(Rend_med_geral = survey_mean(VD4016, na.rm = TRUE)) |> 
+  select(-Rend_med_geral_se)
+
+renda_med_esp_4tri23Nacional <- base_pnad23_4ts |> #Nacional
+  filter(V4010 == "2212") |> 
+  summarise(Rend_esp_geral = survey_mean(VD4016, na.rm = TRUE)) |> 
+  select(-Rend_esp_geral_se)
+
+
+renda_med_esp_4tri23 <- base_pnad23_4ts |> #Estadual
+  filter(V4010 == "2212") |> 
+  group_by(UF) |> 
+  summarise(Rend_med_esp = survey_mean(VD4016, na.rm = TRUE)) |> 
+  select(-Rend_med_esp_se)
+
+renda_med <- renda_med_geral_4tri23 |> 
+  left_join(renda_med_esp_4tri23, by = c("UF" = "UF"))
+```
+
+### 7.1. Gráfico coroplético
+
+```{r}
+malha_UF <- st_read("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/02-scripts/malha_uf/BR_UF_2022.shp")
+
+mapa_renda <- renda_med |> 
+  left_join(malha_UF, by = c("UF" = "NM_UF"))
+
+ggplot(data = mapa_renda) +
+  geom_sf(aes(fill = Rend_med_geral, geometry = geometry)) +  # Adicione a estética geometry
+  scale_fill_viridis_b(limits = c(6600, 25000)) +  # Use a escala de preenchimento Viridis
+  labs(fill = "Médicos por mil hab.") +  # Etiqueta para a legenda de cores
+  theme_void() +
+   theme(
+    legend.box.spacing = unit(-2, "cm"))
+
+ggsave('mapa_renda_med_geral_uf.png', width = 8, height = 8, dpi = 500)
+
+ggplot(data = mapa_renda) +
+  geom_sf(aes(fill = Rend_med_esp, geometry = geometry)) +  # Adicione a estética geometry
+  scale_fill_viridis_b(limits = c(6600, 25000)) +  # Use a escala de preenchimento Viridis
+  labs(fill = "Médicos por mil hab.") +  # Etiqueta para a legenda de cores
+  theme_void() +
+   theme(
+    legend.box.spacing = unit(-2, "cm"))
+
+ggsave('mapa_renda_esp_geral_uf.png', width = 8, height = 8, dpi = 500)
+```
+
+## 8. Razão de médicos habilitados no Conselho Federal de Medicina por população desagregado em UF.
+
+```{r}
+censo_uf <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/censo_uf.xlsx")
+
+medicos_cfm <- read_excel("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/medicos_cfm.xlsx")
+
+
+```
+
+### 8.1. Gráfico coroplético
+
+```{r}
+mapa_med_cfm <- malha_UF |> 
+  left_join(censo_uf, by = c("NM_UF" = "UF"))
+
+mapa_med_cfm <- mapa_med_cfm |> 
+  left_join(medicos_cfm, by = c("SIGLA_UF" = "UF"))
+
+mapa_med_cfm <- mapa_med_cfm |> 
+  mutate(razao_med = (Medicos/populacao)*1000)
+
+razao_medicos_brasil <- mapa_med_cfm |> 
+  mutate(razao = (sum(Medicos)/sum(populacao))*1000)
+
+ggplot(data = mapa_med_cfm) +
+  geom_sf(aes(fill = razao_med, geometry = geometry)) +  # Adicione a estética geometry
+  scale_fill_viridis_c(limits = c(1, 7)) +  # Use a escala de preenchimento Viridis
+  labs(fill = "Médicos por mil hab") +  # Etiqueta para a legenda de cores
+  theme_void()
+
+ggplot(data = mapa_med_cfm) +
+  geom_sf(aes(fill = razao_med, geometry = geometry)) +  # Adicione a estética geometry
+  scale_fill_viridis_b(limits = c(1, 7)) +  # Use a escala de preenchimento Viridis
+  labs(fill = "Médicos por mil hab.") +  # Etiqueta para a legenda de cores
+  theme_void() +
+   theme(
+    legend.box.spacing = unit(-2, "cm"))
+
+ggsave('medicos_por_hab_uf_cfm.png', width = 8, height = 8, dpi = 500)
 ```

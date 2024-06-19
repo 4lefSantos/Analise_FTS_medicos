@@ -1,8 +1,0 @@
-"0","cadunico <- read_excel(""C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/cadunico.xlsx"") |> "
-"0","  mutate(ibge = substr(ibge, 1, 6))"
-"0",""
-"0","cadunico <- cadunico |> "
-"0","  select(-Unidade_Territorial)"
-"0",""
-"0","base_final <- base_final |> "
-"0","  left_join(cadunico, by = c(""ibge"" = ""ibge""))"
