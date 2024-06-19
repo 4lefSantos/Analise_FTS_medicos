@@ -1,0 +1,7 @@
+"0","população_municipios <- faixa_total |> 
+  select(ibge, municipio, total) |> 
+  group_by(ibge, municipio) |> 
+  summarise(população = sum(total)) |> 
+  mutate(ibge = substr(ibge, 1, 6))
+"
+"2","`summarise()` has grouped output by 'ibge'. You can override using the `.groups` argument."
