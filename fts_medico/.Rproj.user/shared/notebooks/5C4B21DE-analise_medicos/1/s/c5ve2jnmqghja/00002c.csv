@@ -1,0 +1,5 @@
+"0","teste <- mapa_ibge |> 
+  left_join(base_final, by = c(""CD_MUN"" = ""ibge""))
+"
+"2","Erro: objeto 'mapa_ibge' não encontrado
+"

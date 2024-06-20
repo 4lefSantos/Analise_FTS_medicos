@@ -1,0 +1,3 @@
+"0",""
+"0","#SALVANDO A IMAGEM GERADA"
+"0","ggsave('medicos_por_hab_uf_cfm.png', width = 8, height = 8, dpi = 500)"

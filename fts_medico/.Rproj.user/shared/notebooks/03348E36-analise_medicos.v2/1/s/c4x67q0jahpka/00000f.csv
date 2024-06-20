@@ -1,0 +1,8 @@
+"0","query <- 'SELECT * FROM ""Open Analytics Layer"".Infraestrutura.""Quantidade de leitos de UTI por tipo e município""'"
+"0",""
+"0",""
+"0","leitos_brasil <- sqlQuery(channel, query, as.is = TRUE)"
+"0",""
+"0","leitos_goias <- leitos_brasil |> "
+"0","  filter(ano == ""2024"") |> "
+"0","  filter(uf_sigla == ""GO"")"

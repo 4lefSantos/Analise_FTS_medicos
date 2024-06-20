@@ -1,0 +1,5 @@
+"0","mapa_med_cfm <- malha_UF |> 
+  left_join(censo_uf, by = c(""NM_UF"" = ""UF""))
+"
+"2","Erro: objeto 'malha_UF' não encontrado
+"

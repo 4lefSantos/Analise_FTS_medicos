@@ -1,0 +1,1 @@
+{"frames":[{"func":"mutate(mapa_med_total, razao = (sum(medicos_FTE_40)/sum(população)) * \n    1000)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Erro: objeto 'mapa_med_total' não encontrado\n"}

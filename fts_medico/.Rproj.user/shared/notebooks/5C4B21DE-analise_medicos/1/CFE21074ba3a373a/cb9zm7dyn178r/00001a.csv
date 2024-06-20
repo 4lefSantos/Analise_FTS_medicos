@@ -1,0 +1,5 @@
+"0","TESTE <- mapa_med_total|> 
+  mutate(razao = (sum(medicos_FTE_40)/sum(população))*1000)
+"
+"2","Erro: objeto 'mapa_med_total' não encontrado
+"

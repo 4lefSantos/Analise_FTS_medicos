@@ -1,0 +1,8 @@
+"0","#MAPA CLOROPÉTICO"
+"0","ggplot(data = mapa_med_cfm) +"
+"0","  geom_sf(aes(fill = razao_med, geometry = geometry)) +  # Adicione a estética geometry"
+"0","  scale_fill_viridis_b(limits = c(1, 7)) +  # Use a escala de preenchimento Viridis"
+"0","  labs(fill = ""Médicos por mil hab."") +  # Etiqueta para a legenda de cores"
+"0","  theme_void() +"
+"0","   theme("
+"0","    legend.box.spacing = unit(-2, ""cm""))"

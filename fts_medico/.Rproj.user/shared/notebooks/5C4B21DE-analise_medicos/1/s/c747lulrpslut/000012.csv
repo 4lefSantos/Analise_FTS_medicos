@@ -1,0 +1,5 @@
+"0","censo_uf <- read_excel(""C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/censo_uf.xlsx"")"
+"0",""
+"0","medicos_cfm <- read_excel(""C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/01-dados/medicos_cfm.xlsx"")"
+"0",""
+"0",""

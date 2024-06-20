@@ -1,0 +1,64 @@
+"0","base_pnadc <- get_pnadc(2023, 4, vars=c(""VD4016"",""V4010"", ""UF""))"
+"2","tentando a URL 'https://ftp.ibge.gov.br/Trabalho_e_Rendimento/Pesquisa_Nacional_por_Amostra_de_Domicilios_continua/Trimestral/Microdados/2023/PNADC_042023.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 209294642 bytes (199.6 MB)
+"
+"2","downloaded 199.6 MB
+
+"
+"2","tentando a URL 'https://ftp.ibge.gov.br/Trabalho_e_Rendimento/Pesquisa_Nacional_por_Amostra_de_Domicilios_continua/Trimestral/Microdados/Documentacao/Dicionario_e_input_20221031.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 70208 bytes (68 KB)
+"
+"2","downloaded 68 KB
+
+"
+"2","tentando a URL 'https://ftp.ibge.gov.br/Trabalho_e_Rendimento/Pesquisa_Nacional_por_Amostra_de_Domicilios_continua/Trimestral/Microdados/Documentacao/Deflatores.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 106212 bytes (103 KB)
+"
+"2","downloaded 103 KB
+
+"
+"0","base_pnad23_4ts <- as_survey(base_pnadc) #HABILITANDO PARA O PACOTE SRVYR"
+"0",""
+"0","renda_med_geral_4tri23Nacional <- base_pnad23_4ts |> #Nacional"
+"0","  filter(V4010 == ""2211"") |> "
+"0","  summarise(Rend_med_geral = survey_mean(VD4016, na.rm = TRUE)) |> "
+"0","  select(-Rend_med_geral_se)"
+"0",""
+"0","renda_med_geral_4tri23 <- base_pnad23_4ts |> #Estadual"
+"0","  filter(V4010 == ""2211"") |> "
+"0","  group_by(UF) |> "
+"0","  summarise(Rend_med_geral = survey_mean(VD4016, na.rm = TRUE)) |> "
+"0","  select(-Rend_med_geral_se)"
+"2","Warning: [38;5;232mThere were 10 warnings in `dplyr::summarise()`.
+The first warning was:[39m
+[38;5;232m[36mℹ[38;5;232m In argument: `Rend_med_geral = survey_mean(VD4016, na.rm = TRUE)`.
+[36mℹ[38;5;232m In group 1: `UF = Rondônia`.[39m
+Caused by warning in `svrVar()`:
+[33m![39m 35 replicates gave NA results and were discarded.
+[38;5;232m[36mℹ[38;5;232m Run ]8;;ide:run:dplyr::last_dplyr_warnings()dplyr::last_dplyr_warnings()]8;; to see the 9 remaining warnings.[39m"
+"0","renda_med_esp_4tri23Nacional <- base_pnad23_4ts |> #Nacional"
+"0","  filter(V4010 == ""2212"") |> "
+"0","  summarise(Rend_esp_geral = survey_mean(VD4016, na.rm = TRUE)) |> "
+"0","  select(-Rend_esp_geral_se)"
+"0",""
+"0",""
+"0","renda_med_esp_4tri23 <- base_pnad23_4ts |> #Estadual"
+"0","  filter(V4010 == ""2212"") |> "
+"0","  group_by(UF) |> "
+"0","  summarise(Rend_med_esp = survey_mean(VD4016, na.rm = TRUE)) |> "
+"0","  select(-Rend_med_esp_se)"
+"2","Warning: [38;5;232mThere were 8 warnings in `dplyr::summarise()`.
+The first warning was:[39m
+[38;5;232m[36mℹ[38;5;232m In argument: `Rend_med_esp = survey_mean(VD4016, na.rm = TRUE)`.
+[36mℹ[38;5;232m In group 1: `UF = Rondônia`.[39m
+Caused by warning in `svrVar()`:
+[33m![39m 9 replicates gave NA results and were discarded.
+[38;5;232m[36mℹ[38;5;232m Run ]8;;ide:run:dplyr::last_dplyr_warnings()dplyr::last_dplyr_warnings()]8;; to see the 7 remaining warnings.[39m"
+"0","renda_med <- renda_med_geral_4tri23 |> "
+"0","  left_join(renda_med_esp_4tri23, by = c(""UF"" = ""UF""))"

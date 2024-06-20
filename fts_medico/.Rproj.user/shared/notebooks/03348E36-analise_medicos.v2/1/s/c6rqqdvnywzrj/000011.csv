@@ -1,0 +1,7 @@
+"0",""
+"0","# GRÁFICO DE BARRA HORIZONTAL"
+"0","ggplot(mapa_med_cfm, aes(x = reorder(NM_UF, razao_med), y = razao_med)) +"
+"0","  geom_bar(stat = ""identity"", fill = ""skyblue"") +  # Usar uma única cor"
+"0","  coord_flip() +  # Inverter os eixos para criar barras horizontais"
+"0","  labs(x = """", y = ""Médicos por mil habitantes"", title = ""Médicos por mil Habitantes"") +"
+"0","  theme_minimal()"

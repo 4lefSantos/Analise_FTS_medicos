@@ -319,12 +319,8 @@ mapa_sf <- st_as_sf(mapa)
 mapaibge <- st_read("C:/Users/alefs/OneDrive/Documentos/Analise_FTS_medicos/fts_medico/02-scripts/malha_municipal_go/GO_Municipios_2022.shp") |> 
   mutate(CD_MUN = substr(CD_MUN, 1, 6))
 
-mapa2 <- mapa2 |> 
+base_final <- mapaibge |> 
   left_join(base_final, by = c("CD_MUN" = "ibge"))
-
-
-
-  left_join(mapaibge, by = c("ibge" = "CD_MUN"))
 
 ggplot(data = teste) +
   geom_sf(aes(fill = razão_medicos, geometry = geometry)) +  # Adicione a estética geometry
@@ -424,11 +420,6 @@ mapa_med_cfm <- mapa_med_cfm |>
 razao_medicos_brasil <- mapa_med_cfm |> 
   mutate(razao = (sum(Medicos)/sum(populacao))*1000)
 
-ggplot(data = mapa_med_cfm) +
-  geom_sf(aes(fill = razao_med, geometry = geometry)) +  # Adicione a estética geometry
-  scale_fill_viridis_c(limits = c(1, 7)) +  # Use a escala de preenchimento Viridis
-  labs(fill = "Médicos por mil hab") +  # Etiqueta para a legenda de cores
-  theme_void()
 
 ggplot(data = mapa_med_cfm) +
   geom_sf(aes(fill = razao_med, geometry = geometry)) +  # Adicione a estética geometry
@@ -438,5 +429,67 @@ ggplot(data = mapa_med_cfm) +
    theme(
     legend.box.spacing = unit(-2, "cm"))
 
+
+
+
+# GRÁFICO DE BARRA HORIZONTAL
+ggplot(mapa_med_cfm, aes(x = reorder(NM_UF, razao_med), y = razao_med)) +
+  geom_bar(stat = "identity", fill = "skyblue") +  # Usar uma única cor
+  coord_flip() +  # Inverter os eixos para criar barras horizontais
+  labs(x = "", y = "Médicos por mil habitantes", title = "Médicos por mil Habitantes") +
+  theme_minimal()
+
 ggsave('medicos_por_hab_uf_cfm.png', width = 8, height = 8, dpi = 500)
+```
+
+### Mapa cloropético PIB per capita
+
+```{r}
+
+ggplot(data = base_final) +
+  geom_sf(aes(fill = pib_percapita, geometry = geometry)) +  # Adicione a estética geometry
+  scale_fill_viridis_c(limits = c(10000, 300000)) +  # Use a escala de preenchimento Viridis
+  labs(fill = "Médicos por mil hab") +  # Etiqueta para a legenda de cores
+  theme_void()
+
+
+ggplot(data = base_final) +
+  geom_sf(aes(fill = pib_percapita, geometry = geometry)) +  # Adicione a estética geometry
+  scale_fill_viridis_b(limits = c(1000, 200000), labels = label_number()) +  # Use a escala de preenchimento Viridis e formate os números
+  labs(fill = "PIB per capita") +  # Etiqueta para a legenda de cores
+  theme_void()
+
+ggsave('mapa_pib_percapita_goias.png', width = 8, height = 8, dpi = 500)
+
+
+```
+
+## Infrestrutura - Total de leitos
+
+```{r}
+
+query <- 'SELECT * FROM "Open Analytics Layer".Infraestrutura."Quantidade de leitos de UTI por tipo e município"'
+
+
+leitos_brasil <- sqlQuery(channel, query, as.is = TRUE)
+
+leitos_goias <- leitos_brasil |> 
+  filter(ano == "2024") |> 
+  filter(uf_sigla == "GO")
+```
+
+Infraestrutura - Quantidade de estelecimentos de saúde.
+
+```{r}
+
+query <- 'SELECT * FROM "Open Analytics Layer".Infraestrutura."Quantidade de estabelecimentos de saúde por tipo e nos municípios"'
+
+estabelecimetos_brasil <- sqlQuery(channel, query, as.is = TRUE)
+
+estabelecimentos_goias <- estabelecimetos_brasil |> 
+  filter(ano == "2024") |> 
+  filter(uf_sigla == "GO") |> 
+  group_by(cod_ibge) |> 
+  mutate(numero_estabelecimentos = as.numeric(numero_estabelecimentos)) |> 
+  summarise(estabelecimentos = sum(numero_estabelecimentos))
 ```
